@@ -6,11 +6,7 @@
 <title>Quizarion</title>
 <style>
   :root{
-    --bg:#081028;
-    --card: rgba(255,255,255,0.04);
-    --accent:#1d6fb2;
-    --muted: rgba(255,255,255,0.6);
-    --Glass: rgba(255,255,255,0.03);
+    --bg:#081028; --card: rgba(255,255,255,0.04); --accent:#1d6fb2; --muted: rgba(255,255,255,0.6); --Glass: rgba(255,255,255,0.03);
   }
   html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:
     radial-gradient(1200px 400px at 10% 20%, rgba(29,111,178,0.12), transparent 10%),
@@ -22,7 +18,6 @@
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
   .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.45)}
   #menu .cat-btn{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;margin-bottom:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
-  #menu .cat-left{display:flex;gap:12px;align-items:center}
   .dot{width:46px;height:46px;border-radius:8px;background:linear-gradient(180deg,var(--accent), #184f80);display:flex;align-items:center;justify-content:center;font-weight:700}
   .progress-small{font-size:12px;color:var(--muted)}
   #quiz-area{display:none}
@@ -38,7 +33,6 @@
   .status-row{display:flex;gap:12px;align-items:center;justify-content:space-between}
   .small{font-size:13px;color:var(--muted)}
   .pct{font-weight:700}
-  .center{display:flex;align-items:center;justify-content:center}
   @media(max-width:720px){.grid{grid-template-columns:1fr}.answers{grid-template-columns:1fr}}
 </style>
 </head>
@@ -56,7 +50,7 @@
     <div id="menu" class="card">
       <div id="categories"></div>
       <div style="margin-top:14px;color:var(--muted);font-size:13px">
-        Tip: Το παιχνίδι αποθηκεύει την πρόοδο τοπικά (στο κινητό/tablet).
+        Tip: Το παιχνίδι αποθηκεύει την πρόοδο τοπικά (στο κινητό/tablet). Για webviewer στο MIT AI βάλ' το όπως έχει.
       </div>
       <div style="margin-top:12px">
         <button class="btn ghost" onclick="resetAll()">Επαναφορά προόδου</button>
@@ -90,36 +84,37 @@
 </div>
 
 <script>
-/* ============================
-  Quizarion final template
-  - Saves position per category in localStorage
-  - Shows percent complete
-  - Shuffles answer order per display
-  - Loads embeddedQuestions OR external questions.json
-  ============================ */
-
-/* ---------- CONFIG ---------- */
-/* Αν έχεις μεγάλο questions.json: βάλε ένα αρχείο questions.json στο ίδιο folder με το index.html
-   αλλιώς μπορείς να επικολλήσεις τις κατηγορίες/ερωτήσεις στην αντικειμενο 'embeddedQuestions' πιο κάτω. */
-
-/* ---------- HELPER ---------- */
+/* ---------- HELPERS ---------- */
 function saveProgressFor(catKey, state){
-  try{ localStorage.setItem('quizarion_progress', JSON.stringify(Object.assign({}, JSON.parse(localStorage.getItem('quizarion_progress')||'{}'), {[catKey]: state} ))); }catch(e){}
+  try{ 
+    const cur = JSON.parse(localStorage.getItem('quizarion_progress')||'{}');
+    cur[catKey] = state;
+    localStorage.setItem('quizarion_progress', JSON.stringify(cur));
+  }catch(e){}
 }
-function loadProgress(){
-  try{return JSON.parse(localStorage.getItem('quizarion_progress')||'{}');}catch(e){return {}}
-}
+function loadProgress(){ try{return JSON.parse(localStorage.getItem('quizarion_progress')||'{}');}catch(e){return {}} }
 function resetAll(){ if(confirm('Θέλεις να διαγράψεις όλη την τοπική πρόοδο;')){ localStorage.removeItem('quizarion_progress'); location.reload(); }}
 
-/* ---------- QUESTIONS SOURCE ---------- */
-/* Αν έχεις ήδη ετοιμασμένο questions.json (σε σωστό JSON), ο κώδικας θα προσπαθήσει να το φορτώσει.
-   Αν δεν υπάρχει, χρησιμοποιεί το embeddedQuestions (μπορείς να επεκτείνεις/να επικολλήσεις τις κατηγορίες σου εκεί). */
+/* ---------- SHUFFLE ---------- */
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+/* ---------- QUESTIONS SOURCE ----------
+   Αν έχεις μεγάλο questions.json: βάλε ένα αρχείο questions.json στο ίδιο folder με το index.html
+   αλλιώς επικόλλησε όλο το JSON σου στο embeddedQuestions κάτω.
+--------------------------------------*/
 
 const embeddedQuestions = {
   "gen": {
     "title": "Γενικές Γνώσεις",
     "questions": [
-      /* Μικρό παράδειγμα: αντικατάστησε/πρόσθεσε εδώ τις δικές σου ερωτήσεις ή άφησέ το κενό για να φορτώσεις questions.json */
+      /* Μικρό παράδειγμα - εσύ κράτησες/έχεις ήδη πολλές ερωτήσεις.
+         Αν θέλεις, ΕΠΑΝΑΦΟΡΤΩΣΕ εδώ όλο το array με ~1200 ερωτήσεις (τύπου αντικειμένου που έστειλες). */
       {
                   q:"Ποια είναι η πρωτεύουσα της Γαλλίας;",
                   a:["Λυών","Παρίσι","Μασσαλία","Τουλούζη"],
@@ -1996,10 +1991,8 @@ const embeddedQuestions = {
 },
     ]
   },
-   "history": {
-      "title":"Ιστορία",
-      "questions":[
-       {
+  "history": { "title":"Ιστορία", "questions":[
+      {
     q:"Ποιος ήταν ο πρώτος βασιλιάς της Μακεδονίας;",
     a:["Αλέξανδρος Α΄","Περδίκκας Α΄","Φίλιππος Β΄","Αρχέλαος"],
     c:1
@@ -3397,12 +3390,9 @@ const embeddedQuestions = {
     a:["Πύθεας","Νέαρχος","Ερατοσθένης","Αρίσταρχος"],
     c:1
 },
-]
-},
-    "science": {
-    "title": "Επιστήμη",
-    "questions": [
-                 {
+  ]},
+  "science": { "title":"Επιστήμη", "questions":[
+      {
     q:"Ποιο μόριο είναι υπεύθυνο για τη μεταφορά ενέργειας στα κύτταρα;",
     a:["ATP","DNA","Ριβόζη","Λιπίδια"],
     c:0
@@ -4200,12 +4190,9 @@ const embeddedQuestions = {
     a:["Το μικρότερο μέρος ύλης","Ομάδα μορίων","Συσσωμάτωμα","Κρύσταλλος"],
     c:0
 },
-]
-},
-    "astronomy": {
-    "title": "Αστροφυσική",
-    "questions": [
-{
+  ]},
+  "astro": { "title":"Αστροφυσική", "questions":[
+      {
     q:"Τι είναι ένας λευκός νάνος;",
     a:["Κατάρρευση γιγάντιου άστρου","Υπολείμματα άστρου χαμηλής μάζας","Μαύρη τρύπα","Πλανήτης χωρίς ατμόσφαιρα"],
     c:1
@@ -5466,12 +5453,9 @@ const embeddedQuestions = {
     a:["Σύννεφο χαμηλής ενέργειας","Ρεύμα φορτισμένων σωματιδίων από τον Ήλιο","Μαγνητική καταιγίδα","Ψύξη της κορώνας"],
     c:1
 },
-]
-},
-    "animals": {
-    "title": "Ζώα",
-    "questions": [
-{
+  ]},
+  "animals": { "title":"Ζώα", "questions":[
+      {
   q:"Ποιο ζώο έχει τη μεγαλύτερη καρδιά στον κόσμο;",
   a:["Ελέφαντας","Μπλε φάλαινα","Καμηλοπάρδαλη","Ιπποπόταμος"],
   c:1
@@ -6231,182 +6215,135 @@ const embeddedQuestions = {
   a:["Γάτα","Άλογο","Αγελάδα","Λύκος"],
   c:1
 },
-]
-}
-  /* --- αν θες πρόσθεσε κι άλλες κατηγορίες εδώ ... --- */
+  ]}
 };
 
-/* ---------- APP STATE ---------- */
-let data = null; // θα περιέχει τις κατηγορίες
-let currentCat = null;
-let currentIndex = 0;
-let progress = loadProgress(); // αντικείμενο με κλειδιά κατηγοριών -> {index,answeredCount}
-
-/* ---------- UTIL ---------- */
-function shuffleArray(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]]=[arr[j],arr[i]];
-  }
-  return arr;
-}
-
-/* ---------- LOAD questions.json IF EXISTS ---------- */
+/* ---------- MAIN: try load external questions.json first ---------- */
+let data = null;
 async function loadData(){
-  // προσπαθούμε να φορτώσουμε external questions.json
+  // try external questions.json
   try{
-    const res = await fetch('questions.json', {cache: "no-store"});
-    if(res.ok){
-      const j = await res.json();
+    const resp = await fetch('questions.json', {cache:'no-store'});
+    if(resp.ok){
+      const j = await resp.json();
       data = j;
-      console.log('Loaded questions.json');
+      init();
       return;
     }
-  }catch(e){
-    // failed to load external file -> fallback to embedded
-  }
+  }catch(e){ /* external not found -> use embedded */ }
+
+  // fallback to embeddedQuestions
   data = embeddedQuestions;
+  init();
 }
 
-/* ---------- UI RENDER ---------- */
-function renderMenu(){
-  const catDiv = document.getElementById('categories');
-  catDiv.innerHTML = '';
-  for(const key of Object.keys(data)){
-    const cat = data[key];
-    const total = (cat.questions || []).length;
-    const p = progress[key] || {index:0, answered:0};
-    const pct = total ? Math.round((p.index/total)*100) : 0;
-    const btn = document.createElement('div');
-    btn.className = 'cat-btn';
-    btn.onclick = ()=> startCategory(key);
-    btn.innerHTML = `
-      <div class="cat-left">
-        <div class="dot">${(cat.title||'').slice(0,1)}</div>
-        <div>
-          <div style="font-weight:600">${cat.title || key}</div>
-          
-        </div>
+/* ---------- UI + Logic ---------- */
+let currentCat = "";
+let index = 0;
+let progress = loadProgress(); // per-cat: { index: N, answered: countCorrect, total: totalQuestions }
+
+window.addEventListener('load', loadData);
+
+function init(){
+  const catDiv = document.getElementById("categories");
+  catDiv.innerHTML = "";
+  for (let key in data){
+    const meta = data[key];
+    const p = progress[key] || { index:0, correct:0 };
+    const total = (meta.questions && meta.questions.length) || 0;
+    const pct = total ? Math.round((p.index / total) * 100) : 0;
+
+    const el = document.createElement('div');
+    el.className = 'cat-btn';
+    el.onclick = ()=> startCategory(key);
+    el.innerHTML = `<div style="display:flex;gap:12px;align-items:center">
+      <div class="dot">${(meta.title||key).slice(0,2).toUpperCase()}</div>
+      <div>
+        <div style="font-weight:700">${meta.title||key}</div>
+        <div class="progress-small">${p.index}/${total} — ${pct}%</div>
       </div>
-      <div style="text-align:right">
-        <div class="progress-small">Ολοκλήρωση</div>
-        <div class="pct">${pct}%</div>
-      </div>
-    `;
-    catDiv.appendChild(btn);
+    </div>
+    <div style="align-self:center;color:var(--muted)">${total} ερωτ.</div>`;
+    catDiv.appendChild(el);
   }
 }
 
-/* ---------- START / SHOW QUESTION ---------- */
-function startCategory(catKey){
-  currentCat = catKey;
-  const p = progress[catKey] || {index:0,answered:0};
-  currentIndex = typeof p.index === 'number' ? p.index : 0;
-  // clamp
-  if(!data[currentCat] || !Array.isArray(data[currentCat].questions)){ alert('Κατηγορία χωρίς ερωτήσεις'); return; }
-  if(currentIndex >= data[currentCat].questions.length) currentIndex = 0;
-  document.getElementById('menu').style.display = 'none';
-  document.getElementById('quiz-area').style.display = 'block';
+function startCategory(cat){
+  currentCat = cat;
+  const catData = data[cat];
+  const total = catData.questions.length;
+  const p = progress[cat] || { index:0, correct:0 };
+  index = Math.min(p.index || 0, total-1);
+  document.getElementById('menu').style.display='none';
+  document.getElementById('quiz-area').style.display='block';
   showQuestion();
 }
 
 function showQuestion(){
-  document.getElementById('nextBtn').style.display = 'none';
-  const cat = data[currentCat];
-  const qObj = cat.questions[currentIndex];
-  document.getElementById('catTitle').innerText = cat.title || currentCat;
-  document.getElementById('qNum').innerText = (currentIndex+1);
-  document.getElementById('qTotal').innerText = cat.questions.length;
-  const pct = Math.round(((currentIndex)/cat.questions.length)*100);
-  document.getElementById('percentDone').innerText = pct + '%';
-  document.getElementById('questionText').innerText = qObj.q || '—';
-  const answersDiv = document.getElementById('answers');
-  answersDiv.innerHTML = '';
-
-  // prepare answers with shuffle but keep track of correct index
-  const options = qObj.a.map((txt, idx)=>({txt, originalIndex: idx}));
-  shuffleArray(options);
-  // store mapping on qObj for check
-  qObj._shuffled = options;
-
-  options.forEach((opt, i) => {
-    const b = document.createElement('button');
-    b.className = 'ans-btn';
-    b.innerText = opt.txt;
-    b.onclick = ()=> checkAnswer(b, i);
-    answersDiv.appendChild(b);
+  document.getElementById('nextBtn').style.display='none';
+  const catData = data[currentCat];
+  const qObj = catData.questions[index];
+  document.getElementById('catTitle').textContent = catData.title;
+  document.getElementById('qNum').textContent = (index+1);
+  document.getElementById('qTotal').textContent = catData.questions.length;
+  const pct = Math.round(((index) / catData.questions.length)*100);
+  document.getElementById('percentDone').textContent = pct + '%';
+  document.getElementById('questionText').textContent = qObj.q || '—';
+  // build answers (shuffle order but keep track of correct)
+  const answersArr = qObj.a.map((t,i)=> ({text:t, origIndex:i}));
+  shuffleArray(answersArr);
+  const ansDiv = document.getElementById('answers');
+  ansDiv.innerHTML = '';
+  answersArr.forEach((item,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'ans-btn';
+    btn.textContent = item.text;
+    btn.onclick = ()=> checkAnswer(btn, item.origIndex);
+    ansDiv.appendChild(btn);
   });
-
-  // save progress (index) immediately so closing will resume here
-  progress[currentCat] = Object.assign({}, progress[currentCat]||{}, {index: currentIndex});
-  saveProgressFor(currentCat, progress[currentCat]);
 }
 
-function checkAnswer(btn, shownIndex){
-  const cat = data[currentCat];
-  const qObj = cat.questions[currentIndex];
-  const shuffled = qObj._shuffled;
-  if(!shuffled) return;
-  const chosenOriginalIndex = shuffled[shownIndex].originalIndex;
-  const correctOriginalIndex = qObj.c;
-  if(chosenOriginalIndex === correctOriginalIndex){
+function checkAnswer(btn, origIndex){
+  const qObj = data[currentCat].questions[index];
+  const correctIndex = qObj.c;
+  if(origIndex === correctIndex){
     btn.classList.add('correct');
-    // disable all answer buttons
-    document.querySelectorAll('.ans-btn').forEach(b=>b.disabled = true);
-    // show next
-    document.getElementById('nextBtn').style.display = 'inline-block';
-    // increase answered count in progress
-    const p = progress[currentCat] || {index:0,answered:0};
-    p.answered = (typeof p.answered === 'number' ? p.answered : 0) + 1;
-    // advance index only when user presses next (so they can review correct)
-    progress[currentCat] = Object.assign({}, p, {index: currentIndex}); // index saved as current (will update on next)
+    disableAnswerButtons();
+    document.getElementById('nextBtn').style.display='inline-block';
+    // save progress: mark index+1 as current
+    const currentIndex = index+1;
+    progress[currentCat] = Object.assign({}, progress[currentCat]||{index:0,correct:0}, { index: currentIndex });
     saveProgressFor(currentCat, progress[currentCat]);
+    // If running inside MIT AppInventor, push string
+    if (window.AppInventor && window.AppInventor.setWebViewString) {
+      try{ window.AppInventor.setWebViewString(currentCat + ":" + currentIndex); }catch(e){}
+    }
   } else {
     btn.classList.add('wrong');
     btn.disabled = true;
   }
 }
 
+function disableAnswerButtons(){
+  document.querySelectorAll('.ans-btn').forEach(b=> b.disabled=true);
+}
+
 function nextQuestion(){
-  const cat = data[currentCat];
-  currentIndex++;
-  if(currentIndex >= cat.questions.length){
+  index++;
+  const total = data[currentCat].questions.length;
+  if(index >= total){
     alert('Τέλος κατηγορίας!');
-    // mark complete
-    progress[currentCat] = Object.assign({}, progress[currentCat]||{}, {index: cat.questions.length});
-    saveProgressFor(currentCat, progress[currentCat]);
     goMenu();
     return;
   }
-  // update and save
-  progress[currentCat] = Object.assign({}, progress[currentCat]||{}, {index: currentIndex});
-  saveProgressFor(currentCat, progress[currentCat]);
   showQuestion();
 }
 
 function goMenu(){
-  currentCat = null;
-  currentIndex = 0;
-  document.getElementById('quiz-area').style.display = 'none';
-  document.getElementById('menu').style.display = 'block';
-  renderMenu();
+  document.getElementById('quiz-area').style.display='none';
+  document.getElementById('menu').style.display='block';
+  init(); // refresh categories progress
 }
-
-/* ---------- BOOT ---------- */
-(async function boot(){
-  await loadData();
-  // validate data basic shape
-  if(!data || typeof data !== 'object'){
-    alert('Δεν βρέθηκαν ερωτήσεις. Έλεγξε το questions.json ή το embeddedQuestions στο index.html');
-    data = embeddedQuestions;
-  }
-  // ensure each category has questions array
-  for(const k of Object.keys(data)){
-    if(!Array.isArray(data[k].questions)) data[k].questions = [];
-  }
-  renderMenu();
-  // If progress exists, you can optionally auto-open last used category — currently we stay in menu.
-})();
 </script>
 </body>
 </html>
